@@ -35,14 +35,6 @@ impl UDPSocket {
         }
     }
 
-    /// Create a new IPv6 UDP socket
-    pub fn new6() -> Result<UDPSocket, Error> {
-        match unsafe { socket(AF_INET6, SOCK_DGRAM, 0) } {
-            -1 => Err(Error::Socket(errno_str())),
-            fd => Ok(UDPSocket { fd, version: 6 }),
-        }
-    }
-
     /// Set socket mode to non blocking
     pub fn set_non_blocking(self) -> Result<UDPSocket, Error> {
         match unsafe { fcntl(self.fd, F_GETFL) } {
@@ -113,10 +105,6 @@ impl UDPSocket {
 
     /// Bind the socket to a local port
     pub fn bind(self, port: u16) -> Result<UDPSocket, Error> {
-        if self.version == 6 {
-            return self.bind6(port);
-        }
-
         self.bind4(port)
     }
 
@@ -142,22 +130,6 @@ impl UDPSocket {
         }
     }
 
-    fn bind6(self, port: u16) -> Result<UDPSocket, Error> {
-        let mut addr: libc::sockaddr_in6 = unsafe { std::mem::zeroed() };
-        addr.sin6_family = AF_INET6 as _;
-        addr.sin6_port = port.to_be();
-
-        match unsafe {
-            bind(
-                self.fd,
-                &addr as *const sockaddr_in6 as *const sockaddr,
-                std::mem::size_of::<sockaddr_in6>() as u32,
-            )
-        } {
-            -1 => Err(Error::Bind(errno_str())),
-            _ => Ok(self),
-        }
-    }
 
     /// Connect a socket to a remote address, must call bind prior to connect
     /// # Panics

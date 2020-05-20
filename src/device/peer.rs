@@ -112,11 +112,7 @@ impl Peer {
                 .set_reuse()?
                 .bind(port)?
                 .connect(&addr)?,
-            Some(addr @ SocketAddr::V6(_)) => UDPSocket::new6()?
-                .set_non_blocking()?
-                .set_reuse()?
-                .bind(port)?
-                .connect(&addr)?,
+            Some(addr @ SocketAddr::V6(_)) => panic!("Attempt to connect to V6 endpoint"),
             None => panic!("Attempt to connect to undefined endpoint"),
         });
 
